@@ -1,12 +1,7 @@
 {
     "name": "SvelteKit + Rust Development",
     "features": {
-        "ghcr.io/devcontainers/features/rust:1": {
-            "version": "1.1.1"
-        },
-        "ghcr.io/lee-orr/rusty-dev-containers/cargo-watch:0": {
-            "version": "0.0.9"
-        }
+		"ghcr.io/devcontainers/features/rust:1": {}
     },
     "customizations": {
         "vscode": {
@@ -14,8 +9,8 @@
                 "terminal.integrated.shell.linux": "/bin/bash"
             },
             "extensions": [
-                "svelte.svelte-vscode",
-                "rust-lang.rust"
+                "1YiB.rust-bundle",
+                "svelte.svelte-vscode"
             ]
         }
     },
@@ -23,6 +18,6 @@
         3000, // Frontend port (SvelteKit)
         8000  // Backend port (Rust)
     ],
-    "postCreateCommand": "cd /workspaces/jobless/backend/ && cargo build",
+    "postCreateCommand": "",
     "remoteUser": "root"
 }
