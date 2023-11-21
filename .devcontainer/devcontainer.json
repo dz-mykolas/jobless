@@ -10,7 +10,8 @@
             },
             "extensions": [
                 "1YiB.rust-bundle",
-                "svelte.svelte-vscode"
+                "svelte.svelte-vscode",
+                "GitHub.copilot"
             ]
         }
     },

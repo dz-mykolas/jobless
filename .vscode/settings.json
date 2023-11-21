@@ -1,5 +1,5 @@
 {
     "rust-analyzer.linkedProjects": [
-        ".\\backend\\Cargo.toml"
+        "/workspaces/jobless/backend/Cargo.toml"
     ]
 }
