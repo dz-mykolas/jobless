@@ -12,15 +12,11 @@ pub struct MyApp {
 
 impl MyApp {
     pub async fn new(db_pool: Pool<Postgres>, cors: CorsLayer) -> Self {
-        let api_routes = web::configure_routes(db_pool.clone());
+        let api_routes = web::routes::configure_routes(db_pool.clone());
 
         let app = api_routes.layer(Extension(db_pool.clone())).layer(cors);
 
         MyApp { router: app }
-
-        // let auth_routes = Router::new()
-        //     .route("/login", axum::handler::post(controllers::auth::login))
-        //     .route("/register", axum::handler::post(controllers::auth::register));
     }
 
     pub fn router(&mut self) -> &mut Router {

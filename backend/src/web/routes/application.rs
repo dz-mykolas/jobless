@@ -1,15 +1,18 @@
 use crate::models::application::{
-    Application, ApplicationController, ApplicationForCreate, ApplicationForUpdate,
+    Application, ApplicationForCreate, ApplicationForUpdate, ApplicationModel,
 };
-use crate::web::Result;
+use crate::web::services::auth::AuthError;
+use crate::web::{Result, ApiError};
+use crate::web::routes::Role;
 
+use axum::Extension;
 use axum::extract::{Path, State};
 use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
 
-pub fn routes(controller: ApplicationController) -> Router {
+pub fn routes(controller: ApplicationModel) -> Router {
     Router::new()
         .route("/applications/:application_id", get(get_application))
         .route("/applications", post(create_application))
@@ -23,7 +26,7 @@ pub fn routes(controller: ApplicationController) -> Router {
 
 // CRUD
 async fn create_application(
-    State(controller): State<ApplicationController>,
+    State(controller): State<ApplicationModel>,
     Json(payload): Json<ApplicationForCreate>,
 ) -> Result<Json<Application>> {
     println!("->> {:<12} - create_application", "HANDLER");
@@ -34,7 +37,7 @@ async fn create_application(
 }
 
 async fn get_application(
-    State(controller): State<ApplicationController>,
+    State(controller): State<ApplicationModel>,
     Path(id): Path<i32>,
 ) -> Result<Json<Application>> {
     println!("->> {:<12} - get_application", "HANDLER");
@@ -45,7 +48,7 @@ async fn get_application(
 }
 
 async fn update_application(
-    State(controller): State<ApplicationController>,
+    State(controller): State<ApplicationModel>,
     Path(id): Path<i32>,
     Json(payload): Json<ApplicationForUpdate>,
 ) -> Result<Json<Application>> {
@@ -57,7 +60,7 @@ async fn update_application(
 }
 
 async fn delete_application(
-    State(controller): State<ApplicationController>,
+    State(controller): State<ApplicationModel>,
     Path(id): Path<i32>,
 ) -> Result<Json<Application>> {
     println!("->> {:<12} - delete_application", "HANDLER");
@@ -69,9 +72,14 @@ async fn delete_application(
 
 // Extra
 async fn get_applications(
-    State(controller): State<ApplicationController>,
+    Extension(role): Extension<Role>,
+    State(controller): State<ApplicationModel>,
 ) -> Result<Json<Vec<Application>>> {
     println!("->> {:<12} - get_applications", "HANDLER");
+
+    if role != Role::Admin || role != Role::Employeer {
+        return Err(ApiError::AuthError(AuthError::Forbidden));
+    }
 
     let applications = controller.get_all().await?;
 

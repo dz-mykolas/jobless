@@ -1,9 +1,24 @@
-pub mod model_application;
-pub mod model_company;
-pub mod model_job;
-pub mod model_user;
+pub mod application;
+pub mod company;
+pub mod job;
+pub mod user;
 
-pub use model_application as application;
-pub use model_company as company;
-pub use model_job as job;
-pub use model_user as user;
+use serde::Serialize;
+
+pub type Result<T> = core::result::Result<T, ModelError>;
+
+#[derive(Debug, Serialize)]
+pub enum ModelError {
+    NotFound,
+    #[serde(skip)]
+    DatabaseError(sqlx::Error),
+}
+
+impl From<sqlx::Error> for ModelError {
+    fn from(err: sqlx::Error) -> Self {
+        match err {
+            sqlx::Error::RowNotFound => ModelError::NotFound,
+            _ => ModelError::DatabaseError(err),
+        }
+    }
+}

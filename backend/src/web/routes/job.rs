@@ -1,14 +1,17 @@
-use crate::models::job::JobController;
-use crate::models::model_job::{Job, JobForCreate, JobForUpdate};
-use crate::web::Result;
+use crate::models::job::JobModel;
+use crate::models::job::{Job, JobForCreate, JobForUpdate};
+use crate::web::services::auth::AuthError;
+use crate::web::{Result, ApiError};
+use crate::web::routes::Role;
 
+use axum::Extension;
 use axum::extract::{Path, State};
 use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
 
-pub fn routes(controller: JobController) -> Router {
+pub fn routes(controller: JobModel) -> Router {
     Router::new()
         // CRUD
         .route("/jobs/:job_id", get(get_job))
@@ -23,20 +26,22 @@ pub fn routes(controller: JobController) -> Router {
 
 // CRUD
 async fn create_job(
-    State(controller): State<JobController>,
+    Extension(role): Extension<Role>,
+    State(controller): State<JobModel>,
     Json(payload): Json<JobForCreate>,
 ) -> Result<Json<Job>> {
     println!("->> {:<12} - create_job", "HANDLER");
+
+    if role != Role::Employeer || role != Role::Admin {
+        return Err(ApiError::AuthError(AuthError::Forbidden));
+    }
 
     let job = controller.create(payload).await?;
 
     Ok(Json(job))
 }
 
-async fn get_job(
-    State(controller): State<JobController>,
-    Path(job_id): Path<i32>,
-) -> Result<Json<Job>> {
+async fn get_job(State(controller): State<JobModel>, Path(job_id): Path<i32>) -> Result<Json<Job>> {
     println!("->> {:<12} - get_job", "HANDLER");
 
     let job = controller.get(job_id).await?;
@@ -45,11 +50,16 @@ async fn get_job(
 }
 
 async fn update_job(
-    State(controller): State<JobController>,
+    Extension(role): Extension<Role>,
+    State(controller): State<JobModel>,
     Path(job_id): Path<i32>,
     Json(payload): Json<JobForUpdate>,
 ) -> Result<Json<Job>> {
     println!("->> {:<12} - update_job", "HANDLER");
+
+    if role != Role::Employeer || role != Role::Admin {
+        return Err(ApiError::AuthError(AuthError::Forbidden));
+    }
 
     let job = controller.update(job_id, payload).await?;
 
@@ -57,10 +67,15 @@ async fn update_job(
 }
 
 async fn delete_job(
-    State(controller): State<JobController>,
+    Extension(role): Extension<Role>,
+    State(controller): State<JobModel>,
     Path(job_id): Path<i32>,
 ) -> Result<Json<Job>> {
     println!("->> {:<12} - delete_job", "HANDLER");
+
+    if role != Role::Employeer || role != Role::Admin {
+        return Err(ApiError::AuthError(AuthError::Forbidden));
+    }
 
     let job = controller.delete(job_id).await?;
 
@@ -68,7 +83,7 @@ async fn delete_job(
 }
 
 // Extra
-async fn get_jobs(State(controller): State<JobController>) -> Result<Json<Vec<Job>>> {
+async fn get_jobs(State(controller): State<JobModel>) -> Result<Json<Vec<Job>>> {
     println!("->> {:<12} - get_jobs", "HANDLER");
 
     let jobs = controller.get_all().await?;

@@ -7,7 +7,7 @@
 
     onMount(async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/companies');
+            const response = await fetch('https://orange-invention-7676gg766x5fr759-3000.app.github.dev/api/companies');
             if (!response.ok) {
                 throw new Error('Failed to fetch');
             }

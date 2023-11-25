@@ -1,14 +1,19 @@
-use crate::models::company::{Company, CompanyController, CompanyForCreate, CompanyForUpdate};
+use std::f32::consts::E;
+
+use crate::models::company::{Company, CompanyForCreate, CompanyForUpdate, CompanyModel};
+use crate::web::services::auth::AuthError;
 use crate::web::{ApiError, Result, Validation};
 
 use axum::extract::{Path, State};
+use axum::Extension;
 use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
-use serde_json::json;
 
-pub fn routes(controller: CompanyController) -> Router {
+use super::Role;
+
+pub fn routes(controller: CompanyModel) -> Router {
     Router::new()
         // CRUD
         .route("/companies", post(create_company))
@@ -23,10 +28,15 @@ pub fn routes(controller: CompanyController) -> Router {
 
 /* CRUD-MAIN */
 async fn create_company(
-    State(controller): State<CompanyController>,
+    Extension(role): Extension<Role>,
+    State(controller): State<CompanyModel>,
     Json(payload): Json<CompanyForCreate>,
 ) -> Result<Json<Company>> {
     println!("->> {:<12} - create_company", "HANDLER");
+
+    if role != Role::Admin {
+        return Err(ApiError::AuthError(AuthError::Forbidden));
+    }
 
     payload.validate()?;
 
@@ -36,7 +46,7 @@ async fn create_company(
 }
 
 async fn get_company(
-    State(controller): State<CompanyController>,
+    State(controller): State<CompanyModel>,
     Path(id): Path<i32>,
 ) -> Result<Json<Company>> {
     println!("->> {:<12} - get_company", "HANDLER");
@@ -49,11 +59,16 @@ async fn get_company(
 }
 
 async fn update_company(
-    State(controller): State<CompanyController>,
+    Extension(role): Extension<Role>,
+    State(controller): State<CompanyModel>,
     Path(id): Path<i32>,
     Json(payload): Json<CompanyForUpdate>,
 ) -> Result<Json<Company>> {
     println!("->> {:<12} - update_company", "HANDLER");
+
+    if role != Role::Admin {
+        return Err(ApiError::AuthError(AuthError::Forbidden));
+    }
 
     validate_id(id)?;
     payload.validate()?;
@@ -64,10 +79,15 @@ async fn update_company(
 }
 
 async fn delete_company(
-    State(controller): State<CompanyController>,
+    Extension(role): Extension<Role>,
+    State(controller): State<CompanyModel>,
     Path(id): Path<i32>,
 ) -> Result<Json<Company>> {
     println!("->> {:<12} - delete_company", "HANDLER");
+
+    if role != Role::Admin {
+        return Err(ApiError::AuthError(AuthError::Forbidden));
+    }
 
     validate_id(id)?;
 
@@ -77,7 +97,7 @@ async fn delete_company(
 }
 
 /* CRUD-EXTRA */
-async fn get_companies(State(controller): State<CompanyController>) -> Result<Json<Vec<Company>>> {
+async fn get_companies(State(controller): State<CompanyModel>) -> Result<Json<Vec<Company>>> {
     println!("->> {:<12} - get_companies", "HANDLER");
 
     let companies = controller.get_all().await?;
@@ -130,7 +150,7 @@ fn validate_company_fields(name: Option<&String>, address: Option<&String>) -> R
 
 fn validate_id(id: i32) -> Result<()> {
     if id < 1 {
-        return Err(ApiError::UnprocessableEntity(
+        return Err(ApiError::BadRequest(
             "id must be greater than 0".to_string(),
         ));
     } else {

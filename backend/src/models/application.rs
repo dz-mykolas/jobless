@@ -1,4 +1,4 @@
-use crate::web::Result;
+use crate::models::Result;
 
 use serde::{Deserialize, Serialize};
 
@@ -24,17 +24,17 @@ pub struct ApplicationForUpdate {
 }
 
 #[derive(Clone)]
-pub struct ApplicationController {
+pub struct ApplicationModel {
     pub pool: sqlx::PgPool,
 }
 
-impl ApplicationController {
+impl ApplicationModel {
     pub fn new(pool: sqlx::PgPool) -> Self {
         Self { pool }
     }
 }
 
-impl ApplicationController {
+impl ApplicationModel {
     pub async fn create(&self, application: ApplicationForCreate) -> Result<Application> {
         let application = sqlx::query_as!(
             Application,
