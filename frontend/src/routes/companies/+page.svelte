@@ -1,23 +1,11 @@
 <script>
-    import { onMount } from 'svelte';
     import CompanyCard from '$lib/components/CompanyCard.svelte';
+    export let data;
 
-    let companies = [];
-    let error = '';
-
-    onMount(async () => {
-        try {
-            const response = await fetch('https://orange-invention-7676gg766x5fr759-3000.app.github.dev/api/companies');
-            if (!response.ok) {
-                throw new Error('Failed to fetch');
-            }
-            companies = await response.json();
-        } catch (e) {
-            error = e.message;
-        }
-    });
+    // Destructure the data prop to get companies and error
+    const companies = data.companies;
+    const error = data.error;
 </script>
-
 
 <div class="companies-container">
     {#if error}
@@ -38,7 +26,7 @@
     .error {
         color: red;
     }
-
+    
     .companies-container {
         background-color: #f9f9f9;
         padding: 20px;
@@ -49,7 +37,7 @@
         max-height: 600px;
         overflow-y: auto;
     }
-
+    
     @media (min-width: 768px) {
         .companies-container {
             max-width: 750px;

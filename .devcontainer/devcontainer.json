@@ -16,8 +16,8 @@
         }
     },
     "forwardPorts": [
-        3000, // Frontend port (SvelteKit)
-        8000  // Backend port (Rust)
+        5173, // Frontend port (SvelteKit)
+        3000  // Backend port (Rust)
     ],
     "postCreateCommand": "",
     "remoteUser": "root"
