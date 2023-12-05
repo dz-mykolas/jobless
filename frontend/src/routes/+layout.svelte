@@ -23,13 +23,12 @@
 	}
 
 	main {
+		width: 100%;
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
+		padding: 0px;
+		margin: 0px;
 		box-sizing: border-box;
 	}
 

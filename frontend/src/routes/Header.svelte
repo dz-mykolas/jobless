@@ -2,7 +2,7 @@
 	<canvas id="particle-canvas"></canvas>
 	<nav>
 		<div class="nav-menu-overlay" on:click={toggleMenu} class:open={menuOpen}></div>
-		<div class="nav-menu" transition:slide={{ y: 0, duration: 300 }} class:open={menuOpen}>
+		<div class="nav-menu" class:open={menuOpen}>
 			<ul>
 				<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
 					<a href="/">Home</a>
@@ -119,7 +119,6 @@
 		display: flex;
 	}
 	
-	/* Default styles for large screens */
 	.nav-menu {
 		display: flex;
 		overflow: hidden;
@@ -131,15 +130,42 @@
 
 	/* Styles for small screens */
 	@media screen and (max-width: 768px) {
+		header {
+			justify-content: left;
+		}
+
 		.nav-menu-overlay {
-			background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+			background-color: rgba(0, 0, 0, 0.5);
 			position: fixed;
 			top: 0;
 			left: 0;
 			width: 100%;
 			height: 100%;
 			display: none;
-			z-index: 99; /* Below the menu but above other content */
+			z-index: 99;
+		}
+
+		.nav-menu-overlay.open {
+			display: block;
+		}
+
+		.nav-menu {
+			background: var(--color-bg-0);
+			width: 250px;
+			display: flex;
+			flex-direction: column;
+			position: fixed;
+			height: 100%;
+			overflow-y: auto;
+			transition: transform 300ms ease;
+			transform: translateX(-100%);
+			z-index: 100;
+		}
+		
+		.nav-menu.open {
+			transition: transform 300ms ease;
+			transform: translateX(0%);
+			left: 0;
 		}
 
 		.nav-menu ul {
@@ -151,41 +177,13 @@
 		}
 
 		.nav-menu ul li {
-			padding: 2em; /* Adjust top and bottom padding as needed */
+			padding: 2em;
 			margin: 0;
 			width: 100%;
 		}
 
 		.nav-menu ul li a {
 			font-size: 1.5rem;
-		}
-
-		.nav-menu-overlay.open {
-			display: block;
-		}
-
-		header {
-			justify-content: left;
-		}
-
-		.nav-menu {
-			background: var(--color-bg-0);
-			width: 250px; /* Width of the menu */
-			display: flex;
-			flex-direction: column;
-			position: fixed;
-			top: 0;
-			left: -250px; /* Hide menu off-screen */
-			height: 100%;
-			overflow-y: auto;
-			transition: transform 300ms ease;
-			transform: translateX(-100%);
-			z-index: 100; /* Ensure the menu is above other content */
-		}
-		
-		.nav-menu.open {
-			transform: translateX(0%);
-			left: 0;
 		}
 
 		.hamburger {
@@ -242,7 +240,6 @@
 <script>
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { slide } from 'svelte/transition';
   
 	let menuOpen = false;
 
@@ -250,8 +247,10 @@
 		menuOpen = !menuOpen;
 		if (menuOpen) {
 			document.body.style.overflow = 'hidden';
+			document.querySelector('.nav-menu').classList.add('open');
 		} else {
 			document.body.style.overflow = '';
+			document.querySelector('.nav-menu').classList.remove('open');
 		}
 	}
 

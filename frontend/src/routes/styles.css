@@ -108,3 +108,12 @@ button:focus:not(:focus-visible) {
 	width: 1px;
 	white-space: nowrap;
 }
+
+.error {
+	color: red;
+}
+
+.success-message {
+    color: green;
+    margin-bottom: 1rem;
+}
