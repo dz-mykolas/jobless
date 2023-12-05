@@ -4,7 +4,7 @@ use jsonwebtoken::{encode, Algorithm, DecodingKey, EncodingKey, Header, Validati
 use serde::{Deserialize, Serialize};
 use std::env;
 
-use crate::{models::user::User, web::routes::Role};
+use crate::{error::MainErrorResponse, models::user::User, web::routes::Role};
 
 #[derive(Debug, Serialize)]
 pub enum TokenError {
@@ -28,15 +28,20 @@ impl From<jsonwebtoken::errors::Error> for TokenError {
 
 impl IntoResponse for TokenError {
     fn into_response(self) -> axum::response::Response {
+        println!("TokenError: {:?}", self);
         match self {
             TokenError::InvalidToken | TokenError::ExpiredToken | TokenError::InvalidSignature => {
-                (axum::http::StatusCode::UNAUTHORIZED, "UNAUTHORIZED").into_response()
+                MainErrorResponse::new(
+                    "INVALID_TOKEN",
+                    "The provided token is invalid. Please login again.",
+                )
+                .into_response(axum::http::StatusCode::UNAUTHORIZED)
             }
-            TokenError::EncodeError(_) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            TokenError::EncodeError(_) => MainErrorResponse::new(
                 "INTERNAL_SERVER_ERROR",
+                "Something went wrong. Please try again later.",
             )
-                .into_response(),
+            .into_response(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
         }
     }
 }
@@ -45,10 +50,10 @@ pub type Result<T> = core::result::Result<T, TokenError>;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: String,       // Subject
-    pub exp: usize,        // Expiration time
-    pub iat: usize,        // Issued at
-    pub iss: String,       // Issuer
+    pub sub: String,     // Subject
+    pub exp: usize,      // Expiration time
+    pub iat: usize,      // Issued at
+    pub iss: String,     // Issuer
     pub user_role: Role, // User role
 }
 

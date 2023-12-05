@@ -1,11 +1,11 @@
 use crate::models::job::JobModel;
 use crate::models::job::{Job, JobForCreate, JobForUpdate};
-use crate::web::services::auth::AuthError;
-use crate::web::{Result, ApiError};
 use crate::web::routes::Role;
+use crate::web::services::auth::AuthError;
+use crate::web::{ApiError, Result};
 
-use axum::Extension;
 use axum::extract::{Path, State};
+use axum::Extension;
 use axum::{
     routing::{delete, get, post, put},
     Json, Router,
@@ -32,7 +32,7 @@ async fn create_job(
 ) -> Result<Json<Job>> {
     println!("->> {:<12} - create_job", "HANDLER");
 
-    if role != Role::Employeer || role != Role::Admin {
+    if role != Role::Employer || role != Role::Admin {
         return Err(ApiError::AuthError(AuthError::Forbidden));
     }
 
@@ -57,7 +57,7 @@ async fn update_job(
 ) -> Result<Json<Job>> {
     println!("->> {:<12} - update_job", "HANDLER");
 
-    if role != Role::Employeer || role != Role::Admin {
+    if role != Role::Employer || role != Role::Admin {
         return Err(ApiError::AuthError(AuthError::Forbidden));
     }
 
@@ -73,7 +73,7 @@ async fn delete_job(
 ) -> Result<Json<Job>> {
     println!("->> {:<12} - delete_job", "HANDLER");
 
-    if role != Role::Employeer || role != Role::Admin {
+    if role != Role::Employer || role != Role::Admin {
         return Err(ApiError::AuthError(AuthError::Forbidden));
     }
 

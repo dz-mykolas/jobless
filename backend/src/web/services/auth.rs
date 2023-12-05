@@ -1,11 +1,10 @@
-use axum::response::IntoResponse;
 use serde::Serialize;
 use sqlx::{Pool, Postgres};
 
 use crate::models::{
-    user::{User, UserCredentials, UserForRegister, UserModel},
-    ModelError,
-};
+        user::{User, UserCredentials, UserForRegister, UserModel},
+        ModelError,
+    };
 
 use crate::web::services::jwt::{self, TokenError};
 
@@ -76,6 +75,7 @@ impl AuthController {
 
         let username = user.username.clone();
         if !verify_user(&user_model, user).await? {
+            println!("Incorrect password");
             return Err(AuthError::IncorrectPassword);
         }
 
@@ -137,7 +137,7 @@ fn validate_password(password: &str) -> bool {
     if !password.contains(|c: char| c.is_numeric()) {
         return false;
     }
-    password.len() < 8 || password.len() > 20
+    password.len() > 8 && password.len() < 20
 }
 
 fn hash_password(password: &str) -> Result<String> {
@@ -150,39 +150,4 @@ async fn verify_user(user_model: &UserModel, user: UserCredentials) -> Result<bo
         .await?;
 
     Ok(bcrypt::verify(user.password, &password_hash)?)
-}
-
-impl IntoResponse for AuthError {
-    fn into_response(self) -> axum::response::Response {
-        match self {
-            AuthError::Forbidden => {
-                (axum::http::StatusCode::FORBIDDEN, "FORBIDDEN").into_response()
-            }
-            AuthError::Unauthorized => {
-                (axum::http::StatusCode::UNAUTHORIZED, "UNAUTHORIZED").into_response()
-            }
-            AuthError::UserAlreadyExists => {
-                (axum::http::StatusCode::CONFLICT, "User already exists").into_response()
-            }
-            AuthError::BadUsername => {
-                (axum::http::StatusCode::BAD_REQUEST, "Bad username").into_response()
-            }
-            AuthError::BadPassword => {
-                (axum::http::StatusCode::BAD_REQUEST, "Bad password").into_response()
-            }
-            AuthError::UserNotFound => {
-                (axum::http::StatusCode::NOT_FOUND, "User not found").into_response()
-            }
-            AuthError::IncorrectPassword => {
-                (axum::http::StatusCode::UNAUTHORIZED, "Incorrect password").into_response()
-            }
-            AuthError::ModelError(err) => err.into_response(),
-            AuthError::TokenError(err) => err.into_response(),
-            AuthError::BcryptError(_) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL_SERVER_ERROR",
-            )
-                .into_response(),
-        }
-    }
 }

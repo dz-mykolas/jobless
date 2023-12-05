@@ -3,15 +3,16 @@ pub mod auth;
 pub mod company;
 pub mod job;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 use tower_cookies::Cookies;
 
-use crate::models::{
-    application::ApplicationModel, company::CompanyModel, job::JobModel, ModelError,
+use crate::{
+    error::MainErrorResponse,
+    models::{application::ApplicationModel, company::CompanyModel, job::JobModel, ModelError},
 };
 use axum::{
-    http::Request,
+    http::{Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
     Router,
@@ -27,15 +28,15 @@ pub type Result<T> = core::result::Result<T, AuthError>;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Role {
     Admin,
-    Employeer,
+    Employer,
     User,
 }
 
 impl From<String> for Role {
     fn from(role: String) -> Self {
-        match role.as_str() {
+        match role.to_lowercase().as_str() {
             "admin" => Role::Admin,
-            "employeer" => Role::Employeer,
+            "employer" => Role::Employer,
             "user" => Role::User,
             _ => Role::User,
         }
@@ -46,24 +47,9 @@ impl PartialEq for Role {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Role::Admin, Role::Admin) => true,
-            (Role::Employeer, Role::Employeer) => true,
+            (Role::Employer, Role::Employer) => true,
             (Role::User, Role::User) => true,
             _ => false,
-        }
-    }
-}
-
-impl IntoResponse for ModelError {
-    fn into_response(self) -> axum::response::Response {
-        match self {
-            ModelError::NotFound => {
-                (axum::http::StatusCode::NOT_FOUND, "NOT_FOUND").into_response()
-            }
-            ModelError::DatabaseError(_) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL_SERVER_ERROR",
-            )
-                .into_response(),
         }
     }
 }
@@ -122,4 +108,49 @@ fn configure_auth_routes(db_pool: Pool<Postgres>) -> Router {
     let auth_routes = Router::new().merge(auth::routes(auth_controller));
 
     auth_routes
+}
+
+impl IntoResponse for ModelError {
+    fn into_response(self) -> axum::response::Response {
+        println!("ModelError: {:?}", self);
+        match self {
+            ModelError::NotFound => MainErrorResponse::new("NOT_FOUND", "Not found")
+                .into_response(axum::http::StatusCode::NOT_FOUND),
+            ModelError::DatabaseError(_) => {
+                MainErrorResponse::new("INTERNAL_SERVER_ERROR", "Internal server error")
+                    .into_response(axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+            }
+        }
+    }
+}
+
+impl IntoResponse for AuthError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            AuthError::Forbidden => MainErrorResponse::new("FORBIDDEN", "Forbidden")
+                .into_response(StatusCode::FORBIDDEN),
+            AuthError::Unauthorized => MainErrorResponse::new("UNAUTHORIZED", "Unauthorized")
+                .into_response(StatusCode::UNAUTHORIZED),
+            AuthError::UserAlreadyExists => {
+                MainErrorResponse::new("USER_EXISTS", "User already exists")
+                    .into_response(StatusCode::BAD_REQUEST)
+            }
+            AuthError::BadUsername => MainErrorResponse::new("INVALID_USERNAME", "Bad username")
+                .into_response(StatusCode::BAD_REQUEST),
+            AuthError::BadPassword => MainErrorResponse::new("INVALID_PASSWORD", "Bad password")
+                .into_response(StatusCode::BAD_REQUEST),
+            AuthError::UserNotFound => MainErrorResponse::new("NOT_FOUND", "User not found")
+                .into_response(StatusCode::NOT_FOUND),
+            AuthError::IncorrectPassword => {
+                MainErrorResponse::new("INCORRECT_PASSWORD", "Incorrect password")
+                    .into_response(StatusCode::UNAUTHORIZED)
+            }
+            AuthError::BcryptError(_) => {
+                MainErrorResponse::new("INTERNAL_SERVER_ERROR", "Internal server error")
+                    .into_response(StatusCode::INTERNAL_SERVER_ERROR)
+            }
+            AuthError::ModelError(err) => err.into_response(),
+            AuthError::TokenError(err) => err.into_response(),
+        }
+    }
 }

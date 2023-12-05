@@ -1,12 +1,12 @@
 use crate::models::application::{
     Application, ApplicationForCreate, ApplicationForUpdate, ApplicationModel,
 };
-use crate::web::services::auth::AuthError;
-use crate::web::{Result, ApiError};
 use crate::web::routes::Role;
+use crate::web::services::auth::AuthError;
+use crate::web::{ApiError, Result};
 
-use axum::Extension;
 use axum::extract::{Path, State};
+use axum::Extension;
 use axum::{
     routing::{delete, get, post, put},
     Json, Router,
@@ -77,7 +77,7 @@ async fn get_applications(
 ) -> Result<Json<Vec<Application>>> {
     println!("->> {:<12} - get_applications", "HANDLER");
 
-    if role != Role::Admin || role != Role::Employeer {
+    if role != Role::Admin || role != Role::Employer {
         return Err(ApiError::AuthError(AuthError::Forbidden));
     }
 

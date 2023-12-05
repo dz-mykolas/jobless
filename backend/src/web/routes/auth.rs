@@ -1,12 +1,15 @@
 use axum::{extract::State, routing::post, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tower_cookies::{Cookie, Cookies, cookie::CookieJar};
+use tower_cookies::{Cookie, Cookies};
 
 use crate::{
+    error::Error,
     models::user::{UserCredentials, UserForRegister},
-    web::services::auth::{AuthController, Result},
+    web::{services::auth::AuthController, ApiError},
 };
+
+pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Deserialize)]
 struct LoginPayload {
@@ -37,8 +40,8 @@ async fn auth_login(
 ) -> Result<Json<Value>> {
     println!("->> {:<12} - api_login", "HANDLER");
 
-    let user = UserCredentials::new(payload.username.clone(), payload.password.clone());
-    let response_user = controller.login(user).await?;
+    let user = UserCredentials::new(payload.username.clone().to_lowercase(), payload.password.clone());
+    let response_user = controller.login(user).await.map_err(ApiError::from)?;
 
     let cookie = Cookie::build("token", response_user.token.clone())
         .path("/")
@@ -60,14 +63,14 @@ async fn auth_register(
 ) -> Result<Json<Value>> {
     println!("->> {:<12} - api_register", "HANDLER");
 
-    let username = payload.username.clone();
+    let username = payload.username.clone().to_lowercase();
     let user = UserForRegister::new(
         username.clone(),
         payload.password.clone(),
         payload.email.clone(),
         payload.role.clone(),
     );
-    let user = controller.register(user).await?;
+    let user = controller.register(user).await.map_err(ApiError::from)?;
 
     Ok(Json(json!({
         "id": user.fk_user_id,

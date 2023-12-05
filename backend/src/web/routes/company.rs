@@ -1,5 +1,3 @@
-use std::f32::consts::E;
-
 use crate::models::company::{Company, CompanyForCreate, CompanyForUpdate, CompanyModel};
 use crate::web::services::auth::AuthError;
 use crate::web::{ApiError, Result, Validation};
