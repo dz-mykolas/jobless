@@ -1,10 +1,4 @@
-/** @type {import('./$types').PageServerLoad} */
-export async function load({ cookies }) {
-    // TODO
-    return { props: {} };
-}
-
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -12,6 +6,7 @@ export const actions = {
         const data = await request.formData();
         const username = data.get('username');
         const password = data.get('password');
+        let isLoginSuccessful = false;
 
         try {
             let response = await fetch('http://localhost:3000/auth/login', {
@@ -42,11 +37,16 @@ export const actions = {
             let result = await response.json();
 
             console.log('Login successful:', result);
+            cookies.set('token', result.token, { path: '/' });
 
-            return { success: true, data: result };
+            isLoginSuccessful = true;
         } catch (err) {
             console.error('Fetch or parsing error:', err);
             return fail(500, { error: "Login failed due to a server error. Please try again later." });
+        }
+
+        if (isLoginSuccessful) {
+            redirect(303, '/');
         }
     },
 };

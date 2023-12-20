@@ -4,10 +4,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Job {
-    id: i32,
-    title: String,
-    description: Option<String>,
-    fk_company_id: i32,
+    pub id: i32,
+    pub title: String,
+    pub description: Option<String>,
+    pub fk_company_id: i32,
+    pub fk_user_id: i32,
 }
 
 #[derive(Deserialize)]
@@ -34,23 +35,42 @@ impl JobModel {
 }
 
 impl JobModel {
-    pub async fn create(&self, job: JobForCreate) -> Result<Job> {
+    pub async fn create(&self, job: JobForCreate, company_id: i32, user_id: i32) -> Result<Job> {
         let job = sqlx::query_as!(
             Job,
             r#"
-                INSERT INTO 
-                    job (title, description) 
-                VALUES 
-                    ($1, $2) 
+                INSERT INTO job (title, description, fk_company_id, fk_user_id)
+                VALUES ($1, $2, $3, $4)
                 RETURNING *
             "#,
-            &job.title,
-            job.description.as_deref()
+            job.title,
+            job.description,
+            company_id,
+            &user_id
         )
         .fetch_one(&self.pool)
         .await?;
 
         Ok(job)
+    }
+
+    pub async fn get_by_company(&self, company_id: i32) -> Result<Vec<Job>> {
+        let jobs = sqlx::query_as!(
+            Job,
+            r#"
+                SELECT 
+                    * 
+                FROM 
+                    job 
+                WHERE 
+                    fk_company_id = $1
+            "#,
+            &company_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(jobs)
     }
 
     pub async fn get_all(&self) -> Result<Vec<Job>> {
@@ -88,22 +108,25 @@ impl JobModel {
         Ok(job)
     }
 
-    pub async fn update(&self, job_id: i32, job: JobForUpdate) -> Result<Job> {
+    pub async fn update(&self, job_id: i32, job: JobForUpdate, user_id: i32) -> Result<Job> {
         let job = sqlx::query_as!(
             Job,
             r#"
                 UPDATE 
                     job 
-                SET
-                    title = COALESCE($1, title),
-                    description = COALESCE($2, description)
+                SET 
+                    title = COALESCE($2, title), 
+                    description = COALESCE($3, description) 
                 WHERE 
-                    id = $3
+                    id = $1
+                AND
+                    ($4 = -1 OR fk_user_id = $4)
                 RETURNING *
             "#,
-            job.title.as_deref(),
-            job.description.as_deref(),
-            &job_id
+            &job_id,
+            job.title,
+            job.description,
+            &user_id
         )
         .fetch_one(&self.pool)
         .await?;
@@ -111,17 +134,20 @@ impl JobModel {
         Ok(job)
     }
 
-    pub async fn delete(&self, job_id: i32) -> Result<Job> {
+    pub async fn delete(&self, job_id: i32, user_id: i32) -> Result<Job> {
         let job = sqlx::query_as!(
             Job,
             r#"
                 DELETE FROM 
                     job 
-                WHERE 
-                    id = $1 
+                WHERE
+                    id = $1
+                AND
+                    ($2 = -1 OR fk_user_id = $2)
                 RETURNING *
             "#,
-            &job_id
+            &job_id,
+            &user_id
         )
         .fetch_one(&self.pool)
         .await?;

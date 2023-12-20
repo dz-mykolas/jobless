@@ -15,12 +15,16 @@ use axum::{
     http::{Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
+    routing::get,
     Router,
 };
 
-use super::services::{
-    auth::{AuthController, AuthError},
-    jwt::get_claims,
+use super::{
+    services::{
+        auth::{AuthController, AuthError},
+        jwt::get_claims,
+    },
+    ApiError,
 };
 
 pub type Result<T> = core::result::Result<T, AuthError>;
@@ -69,10 +73,9 @@ pub async fn auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response> {
 
     // Process the JWT using the value
     let claims = get_claims(&jwt_cookie_value)?;
-    let role = claims.user_role;
 
     // Insert role into request extensions
-    req.extensions_mut().insert(role);
+    req.extensions_mut().insert(claims);
 
     // Continue processing the request
     Ok(next.run(req).await)
@@ -93,6 +96,19 @@ fn configure_api_routes(db_pool: Pool<Postgres>) -> Router {
 
     let api_routes = Router::new()
         .merge(company::routes(company_controller))
+        .merge(
+            Router::new()
+                .route("/jobs", get(self::job::get_all_jobs))
+                .with_state(job_controller.clone()),
+        )
+        .merge(
+            Router::new()
+                .route(
+                    "/applications/user",
+                    get(self::application::get_applications_by_user),
+                )
+                .with_state(application_controller.clone()),
+        )
         .nest("/companies/:id", job::routes(job_controller))
         .nest(
             "/companies/:id/jobs/:id",

@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ cookies }) {
@@ -15,7 +15,7 @@ export const actions = {
         const confirmPassword = data.get('confirmPassword');
         const email = data.get('email');
         const role = data.get('role');
-        let isRegistrationSuccessful = false;
+        
 
         // Validate password confirmation
         if (password !== confirmPassword) {
@@ -49,7 +49,7 @@ export const actions = {
 
         // Redirect after successful registration
         if (isRegistrationSuccessful) {
-            throw redirect(303, '/login?success=Registration successful. Please log in.');
+            redirect(303, '/login?success=Registration successful. Please log in.');
         }
     },
 };

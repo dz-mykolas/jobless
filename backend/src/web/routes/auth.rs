@@ -30,6 +30,7 @@ pub fn routes(controller: AuthController) -> Router {
         .route("/login", post(auth_login))
         .route("/logout", post(auth_logout))
         .route("/register", post(auth_register))
+        .route("/verify", post(auth_verify))
         .with_state(controller)
 }
 
@@ -40,7 +41,10 @@ async fn auth_login(
 ) -> Result<Json<Value>> {
     println!("->> {:<12} - api_login", "HANDLER");
 
-    let user = UserCredentials::new(payload.username.clone().to_lowercase(), payload.password.clone());
+    let user = UserCredentials::new(
+        payload.username.clone().to_lowercase(),
+        payload.password.clone(),
+    );
     let response_user = controller.login(user).await.map_err(ApiError::from)?;
 
     let cookie = Cookie::build("token", response_user.token.clone())
@@ -99,5 +103,31 @@ async fn auth_logout(cookies: Cookies) -> Result<Json<Value>> {
 
     Ok(Json(json!({
         "message": "Successfully logged out",
+    })))
+}
+
+async fn auth_verify(
+    State(controller): State<AuthController>,
+    cookies: Cookies,
+) -> Result<Json<Value>> {
+    println!("->> {:<12} - api_verify", "HANDLER");
+    let token_cookie = cookies
+        .get("token")
+        .and_then(|c| c.value().parse::<String>().ok());
+    let mut claims = json!({});
+
+    if token_cookie.is_none() {
+        println!("->> {:<12} - api_verify: no token cookie found", "HANDLER");
+    } else {
+        println!("->> {:<12} - api_verify: token cookie found", "HANDLER");
+        claims = json!(controller
+            .verify(&token_cookie.unwrap())
+            .await
+            .map_err(ApiError::from)?);
+    }
+
+    Ok(Json(json!({
+        "message": "Successfully verified",
+        "claims": claims,
     })))
 }

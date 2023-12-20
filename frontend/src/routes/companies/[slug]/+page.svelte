@@ -1,9 +1,10 @@
 <script>
-    import CompanyCard from '$lib/components/CompanyCard.svelte';
+    import JobCard from '$lib/components/JobCard.svelte';
     export let data;
 
-    const companies = data.companies;
+    const jobs = data.jobs;
     const error = data.error;
+    const company = data.company;
 
     import { user } from '$lib/stores.js';
 
@@ -19,11 +20,12 @@
         isFormModalActive = true;
 
         if (action === 'create') {
-            formModalTitle = 'Create Company';
+            formModalTitle = 'Create Job';
             formAction = '?/create';
             formFields = [
-                { name: 'name', type: 'text', placeholder: 'Name' },
-                { name: 'address', type: 'text', placeholder: 'Address' }
+                { name: 'companyId', type: 'hidden', value: company.id },
+                { name: 'title', type: 'text', placeholder: 'Title' },
+                { name: 'description', type: 'text', placeholder: 'Description' }
             ];
         }
     }
@@ -33,7 +35,8 @@
     }
 </script>
 
-<div class="companies-container">
+<div class="jobs-container">
+    <h4>Jobs in company: {company.name}</h4>
     {#if error}
         <p class="error">{error}</p>
     {:else}
@@ -44,14 +47,15 @@
             fields={formFields}
             onCancel={handleFormCancel}
         />
-        {#if $user && $user.role === 'Admin'}
+        {#if $user && ($user.role === 'Admin' || $user.role === 'Employer')}
             <button class="create" on:click={() => openModal('create')}>Create</button>
         {/if}
-        {#each companies as company}
+        {#each jobs as job}
             {#if $user}
-                <CompanyCard 
-                    company={company}
+                <JobCard 
+                    job={job}
                     role={$user.role}
+                    user_id={parseInt($user.sub)}
                 />
             {/if}
         {/each}
@@ -63,7 +67,7 @@
         color: red;
     }
     
-    .companies-container {
+    .jobs-container {
         background-color: #f9f9f9;
         padding: 20px;
         border-radius: 10px;
@@ -76,17 +80,17 @@
     }
     
     @media (min-width: 768px) {
-        .companies-container {
+        .jobs-container {
             max-width: 750px;
         }
     }
     @media (min-width: 992px) {
-        .companies-container {
+        .jobs-container {
             max-width: 970px;
         }
     }
     @media (min-width: 1200px) {
-        .companies-container {
+        .jobs-container {
             max-width: 1170px;
         }
     }

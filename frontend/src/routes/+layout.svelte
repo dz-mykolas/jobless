@@ -1,17 +1,33 @@
 <script>
-	import Header from './Header.svelte';
-	import './styles.css';
+    import Header from './Header.svelte';
+    import '/src/styles/styles.css';
+
+	import { user } from '$lib/stores.js';
+	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
+	export let data;
+
+	onMount(() => {
+		console.log('data', data);
+		user.set(data.user);
+	});
+
+	$: if (browser) {
+		const pathname = $page.url;
+		console.log('pathname', pathname);
+		user.set(data.user);
+	}
 </script>
 
 <div class="app">
 	<Header />
-
 	<main>
 		<slot />
 	</main>
 
 	<footer>
-		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
+		<p>Visit <a href="https://github.com/dz-mykolas/jobless">Github Page</a> to learn more about this project</p>
 	</footer>
 </div>
 
@@ -19,7 +35,9 @@
 	.app {
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
+		box-sizing: border-box;
+		margin: 0;
+		height: 100vh;
 	}
 
 	main {
@@ -38,6 +56,7 @@
 		justify-content: center;
 		align-items: center;
 		padding: 12px;
+		margin: 0;
 	}
 
 	footer a {

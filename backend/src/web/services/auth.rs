@@ -2,11 +2,13 @@ use serde::Serialize;
 use sqlx::{Pool, Postgres};
 
 use crate::models::{
-        user::{User, UserCredentials, UserForRegister, UserModel},
-        ModelError,
-    };
+    user::{User, UserCredentials, UserForRegister, UserModel},
+    ModelError,
+};
 
 use crate::web::services::jwt::{self, TokenError};
+
+use super::jwt::Claims;
 
 pub type Result<T> = core::result::Result<T, AuthError>;
 
@@ -116,6 +118,12 @@ impl AuthController {
         };
 
         Ok(user)
+    }
+
+    pub async fn verify(&self, token: &str) -> Result<Claims> {
+        let claims = jwt::validate_token(token)?;
+
+        Ok(claims)
     }
 }
 

@@ -11,6 +11,7 @@
     export let form;
 
     let successMessage = $page.url.searchParams.get('success');
+    let errorMessage = $page.url.searchParams.get('error');
 </script>
 
 <div class="auth-container">
@@ -32,6 +33,9 @@
         {#if form?.error}<p class="error">{form?.error ?? ''}</p>{/if}
         {#if successMessage}
             <p class="success-message">{successMessage}</p>
+        {/if}
+        {#if errorMessage}
+            <p class="error">{errorMessage}</p>
         {/if}
         <button>LOGIN</button>
     </form>

@@ -48,27 +48,27 @@ impl IntoResponse for TokenError {
 
 pub type Result<T> = core::result::Result<T, TokenError>;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: String,     // Subject
-    pub exp: usize,      // Expiration time
-    pub iat: usize,      // Issued at
-    pub iss: String,     // Issuer
-    pub user_role: Role, // User role
+    pub sub: String, // Subject
+    pub exp: usize,  // Expiration time
+    pub iat: usize,  // Issued at
+    pub iss: String, // Issuer
+    pub role: Role,  // User role
 }
 
 pub fn create_token(user: &User) -> Result<String> {
     let current_time = Utc::now();
     let iat = current_time.timestamp() as usize;
     // 60s leeway added by default: https://docs.rs/jsonwebtoken/latest/jsonwebtoken/struct.Validation.html#structfield.leeway
-    let exp = (current_time + chrono::Duration::seconds(10)).timestamp() as usize;
+    let exp = (current_time + chrono::Duration::seconds(3600)).timestamp() as usize;
 
     let claims = Claims {
         sub: user.fk_user_id.to_string(),
         exp,
         iat,
         iss: "jobless_app".to_string(),
-        user_role: Role::from(user.role.clone()),
+        role: Role::from(user.role.clone()),
     };
 
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
@@ -83,6 +83,16 @@ pub fn create_token(user: &User) -> Result<String> {
 }
 
 pub fn get_claims(token: &str) -> Result<Claims> {
+    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let decoding_key = DecodingKey::from_secret(secret.as_bytes());
+    let claims =
+        jsonwebtoken::decode::<Claims>(token, &decoding_key, &Validation::new(Algorithm::HS256))?
+            .claims;
+
+    Ok(claims)
+}
+
+pub fn validate_token(token: &str) -> Result<Claims> {
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
     let decoding_key = DecodingKey::from_secret(secret.as_bytes());
     let claims =

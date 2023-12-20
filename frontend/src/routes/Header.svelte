@@ -1,4 +1,4 @@
-<header>
+<header data-sveltekit-preload-data="off">
 	<canvas id="particle-canvas"></canvas>
 	<nav>
 		<div class="nav-menu-overlay" on:click={toggleMenu} class:open={menuOpen}></div>
@@ -30,20 +30,234 @@
 		  	<!-- 1) Display login and register if not logged in -->
 			<!-- 2) Else display profile button -->
 			<ul>
-				<li aria-current={$page.url.pathname === '/login' || $page.url.pathname === '/register' ? 'page' : undefined}>
-					<a href="/login">Login</a>
-				</li>
+				{#if $user}
+					<li aria-current={$page.url.pathname === '/profile' ? 'page' : undefined}>
+						<a href="/profile">UID: {$user.sub}</a>
+					</li>
+					<li>
+						<a href="/logout">Logout</a>
+					</li>
+				{:else}
+					<li aria-current={$page.url.pathname === '/login' || $page.url.pathname === '/register' ? 'page' : undefined}>
+						<a href="/login">Login</a>
+					</li>
+				{/if}
 			</ul>
 		</div>
 	</nav>
 </header>
 
+<script>
+	import { user } from '$lib/stores.js';
+	import { page } from '$app/stores';
+
+	let menuOpen = false;
+
+	function toggleMenu() {
+		menuOpen = !menuOpen;
+		if (menuOpen) {
+			document.body.style.overflow = 'hidden';
+			document.querySelector('.nav-menu').classList.add('open');
+		} else {
+			document.body.style.overflow = '';
+			document.querySelector('.nav-menu').classList.remove('open');
+		}
+	}
+
+	// Animation (not GPU efficient)
+	// onMount(() => {
+	// 	// modified version of random-normal
+	// 	function normalPool(o){
+	// 		var r = 0;
+	// 		do { 
+	// 			var a = Math.round(normal({mean:o.mean,dev:o.dev}));
+	// 			if(a < o.pool.length && a >= 0) {
+	// 				return o.pool[a]
+	// 			}
+	// 			r++
+	// 		} while(r < 100) 
+	// 	}
+		
+	// 	function randomNormal(o) {
+	// 		if (o = Object.assign( {mean: 0, dev: 1, pool: []} , o), Array.isArray(o.pool) && o.pool.length > 0) {
+	// 			return normalPool(o);
+	// 		}
+	// 		var r, a, n, e, l = o.mean, t = o.dev;
+	// 		do {
+	// 			r = (a = 2 * Math.random() - 1) * a + (n = 2 * Math.random() - 1) * n
+	// 		} while(r >= 1);
+	// 		return e = a * Math.sqrt(-2 * Math.log(r) / r), t * e + l
+	// 	}
+		
+	// 	const NUM_PARTICLES = 8;
+	// 	const PARTICLE_SIZE = 20; // View heights
+	// 	const SPEED = 250000; // Milliseconds
+	// 	const ALPHA_RAND = rand(0.05, 0.15);
+		
+	// 	let particles = [];
+		
+	// 	function rand(low, high) {
+	// 		return Math.random() * (high - low) + low;
+	// 	}
+		
+	// 	function createParticle(canvas) {
+	// 		const colour = {
+	// 			r: 206,
+	// 			g: randomNormal({ mean: 190, dev: 5 }),
+	// 			b: 185,
+	// 			a: ALPHA_RAND,
+	// 		};
+	// 		return {
+	// 			x: -2,
+	// 			y: -2,
+	// 			diameter: Math.max(0, randomNormal({ mean: PARTICLE_SIZE, dev: PARTICLE_SIZE / 2 })),
+	// 			duration: randomNormal({ mean: SPEED, dev: SPEED * 0.10 }),
+	// 			amplitude: randomNormal({ mean: 16, dev: 2 }),
+	// 			offsetY: randomNormal({ mean: 0, dev: 10 }),
+	// 			arc: Math.PI * 2,
+	// 			startTime: performance.now() - rand(0, SPEED),
+	// 			colour: `rgba(${colour.r}, ${colour.g}, ${colour.b}, ${colour.a})`,
+	// 		}
+	// 	}
+		
+	// 	function moveParticle(particle, canvas, time) {
+	// 		const progress = ((time - particle.startTime) % particle.duration) / particle.duration;
+	// 		const color = particle.colour;
+	// 		let newColor = color;
+
+	// 		const regex = /rgba\((\d+),\s*([\d.]+),\s*(\d+),\s*([\d.]+)\)/;
+	// 		let match = color.match(regex);
+	// 		if (match) {
+	// 			let red = match[1];
+	// 			let green = match[2];
+	// 			let blue = match[3];
+	// 			let alpha = match[4];
+	// 			if (progress > 0.9) {
+	// 				if (alpha > 0.01) {
+	// 					alpha -= 0.001;
+	// 				}
+	// 				newColor = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+	// 			} else if (particle.x > progress) {
+	// 				alpha = ALPHA_RAND;
+	// 				newColor = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+	// 			}
+	// 		}
+			
+	// 		return {
+	// 			...particle,
+	// 			x: progress - 0.1,
+	// 			y: ((Math.sin(progress * particle.arc) * particle.amplitude) + particle.offsetY),
+	// 			colour: newColor,
+	// 		};
+	// 	}
+		
+	// 	function drawParticle(particle, canvas, ctx) {
+	// 		canvas = document.getElementById('particle-canvas');
+	// 		const vh = canvas.height / 100;
+			
+	// 		ctx.fillStyle = particle.colour;
+	// 		ctx.beginPath();
+	// 		ctx.ellipse(
+	// 		particle.x * canvas.width,
+	// 		particle.y * vh + (canvas.height / 2),
+	// 		particle.diameter * vh,
+	// 		particle.diameter * vh,
+	// 		0,
+	// 		0,
+	// 		2 * Math.PI
+	// 		);
+	// 		ctx.fill();
+	// 	}
+		
+	// 	function draw(time, canvas, ctx) {
+	// 		// Move particles
+	// 		particles.forEach((particle, index) => {
+	// 			particles[index] = moveParticle(particle, canvas, time);
+	// 		})
+			
+	// 		// Clear the canvas
+	// 		ctx.clearRect(0, 0, canvas.width, canvas.height);
+			
+	// 		// Draw the particles
+	// 		particles.forEach((particle) => {
+	// 			drawParticle(particle, canvas, ctx);
+	// 		})
+			
+	// 		// Schedule next frame
+	// 		requestAnimationFrame((time) => draw(time, canvas, ctx));
+	// 	}
+		
+	// 	function initializeCanvas() {
+	// 		let canvas = document.getElementById('particle-canvas');
+	// 		canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+	// 		canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+	// 		let ctx = canvas.getContext("2d");
+			
+	// 		window.addEventListener('resize', () => {
+	// 			canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+	// 			canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+	// 			ctx = canvas.getContext("2d");
+	// 		})
+			
+	// 		return [canvas, ctx];
+	// 	}
+		
+	// 	function startAnimation() {
+	// 		if (document.getElementById('particle-canvas') === null) {
+	// 			return;
+	// 		}
+	// 		const [canvas, ctx] = initializeCanvas();
+			
+	// 		// Create a bunch of particles
+	// 		for (let i = 0; i < NUM_PARTICLES; i++) {
+	// 			particles.push(createParticle(canvas));
+	// 		}
+			
+	// 		requestAnimationFrame((time) => draw(time, canvas, ctx));
+	// 	};
+		
+	// 	// Start animation when document is loaded
+	// 	(function () {
+	// 		if (document.readystate !== 'loading') {
+	// 			startAnimation();
+	// 		} else {
+	// 			document.addEventListener('DOMContentLoaded', () => {
+	// 				startAnimation();
+	// 			})
+	// 		}
+	// 	}());
+	// });
+</script>
+
 <style>
 	header {
 		display: flex;
 		justify-content: center;
+		padding-bottom: 5em;
+		margin: 0;
 	}
 	
+	.user-menu ul {
+		display: flex;
+		flex-flow: column wrap; 
+		height: auto;
+	}
+
+	.user-menu ul li {
+		height: 3.75em;
+		margin-left: auto;
+	}
+
+	.user-menu ul li[aria-current='page']::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		bottom: 10px;
+		width: 100%;
+		border-bottom: solid 2px var(--color-theme-4);
+		animation: border_anim 0.35s ease-out forwards;
+	}
+
 	#particle-canvas {
 		z-index: -1;
 		position: absolute;
@@ -113,12 +327,15 @@
 	}
 	
 	.user-menu {
+		margin-top: 0px;
 		position: absolute;
 		right: 0;
 		padding-right: 2em;
 		display: flex;
+		height: auto;
 	}
-	
+
+
 	.nav-menu {
 		display: flex;
 		overflow: hidden;
@@ -236,185 +453,3 @@
 	}
 
 </style>
-
-<script>
-	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
-  
-	let menuOpen = false;
-
-	function toggleMenu() {
-		menuOpen = !menuOpen;
-		if (menuOpen) {
-			document.body.style.overflow = 'hidden';
-			document.querySelector('.nav-menu').classList.add('open');
-		} else {
-			document.body.style.overflow = '';
-			document.querySelector('.nav-menu').classList.remove('open');
-		}
-	}
-
-	// Animation
-	onMount(() => {
-		// modified version of random-normal
-		function normalPool(o){
-			var r = 0;
-			do { 
-				var a = Math.round(normal({mean:o.mean,dev:o.dev}));
-				if(a < o.pool.length && a >= 0) {
-					return o.pool[a]
-				}
-				r++
-			} while(r < 100) 
-		}
-		
-		function randomNormal(o) {
-			if (o = Object.assign( {mean: 0, dev: 1, pool: []} , o), Array.isArray(o.pool) && o.pool.length > 0) {
-				return normalPool(o);
-			}
-			var r, a, n, e, l = o.mean, t = o.dev;
-			do {
-				r = (a = 2 * Math.random() - 1) * a + (n = 2 * Math.random() - 1) * n
-			} while(r >= 1);
-			return e = a * Math.sqrt(-2 * Math.log(r) / r), t * e + l
-		}
-		
-		const NUM_PARTICLES = 8;
-		const PARTICLE_SIZE = 20; // View heights
-		const SPEED = 250000; // Milliseconds
-		const ALPHA_RAND = rand(0.05, 0.15);
-		
-		let particles = [];
-		
-		function rand(low, high) {
-			return Math.random() * (high - low) + low;
-		}
-		
-		function createParticle(canvas) {
-			const colour = {
-				r: 206,
-				g: randomNormal({ mean: 190, dev: 5 }),
-				b: 185,
-				a: ALPHA_RAND,
-			};
-			return {
-				x: -2,
-				y: -2,
-				diameter: Math.max(0, randomNormal({ mean: PARTICLE_SIZE, dev: PARTICLE_SIZE / 2 })),
-				duration: randomNormal({ mean: SPEED, dev: SPEED * 0.10 }),
-				amplitude: randomNormal({ mean: 16, dev: 2 }),
-				offsetY: randomNormal({ mean: 0, dev: 10 }),
-				arc: Math.PI * 2,
-				startTime: performance.now() - rand(0, SPEED),
-				colour: `rgba(${colour.r}, ${colour.g}, ${colour.b}, ${colour.a})`,
-			}
-		}
-		
-		function moveParticle(particle, canvas, time) {
-			const progress = ((time - particle.startTime) % particle.duration) / particle.duration;
-			const color = particle.colour;
-			let newColor = color;
-
-			const regex = /rgba\((\d+),\s*([\d.]+),\s*(\d+),\s*([\d.]+)\)/;
-			let match = color.match(regex);
-			if (match) {
-				let red = match[1];
-				let green = match[2];
-				let blue = match[3];
-				let alpha = match[4];
-				if (progress > 0.9) {
-					if (alpha > 0.01) {
-						alpha -= 0.001;
-					}
-					newColor = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-				} else if (particle.x > progress) {
-					alpha = ALPHA_RAND;
-					newColor = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-				}
-			}
-			
-			return {
-				...particle,
-				x: progress - 0.1,
-				y: ((Math.sin(progress * particle.arc) * particle.amplitude) + particle.offsetY),
-				colour: newColor,
-			};
-		}
-		
-		function drawParticle(particle, canvas, ctx) {
-			canvas = document.getElementById('particle-canvas');
-			const vh = canvas.height / 100;
-			
-			ctx.fillStyle = particle.colour;
-			ctx.beginPath();
-			ctx.ellipse(
-			particle.x * canvas.width,
-			particle.y * vh + (canvas.height / 2),
-			particle.diameter * vh,
-			particle.diameter * vh,
-			0,
-			0,
-			2 * Math.PI
-			);
-			ctx.fill();
-		}
-		
-		function draw(time, canvas, ctx) {
-			// Move particles
-			particles.forEach((particle, index) => {
-				particles[index] = moveParticle(particle, canvas, time);
-			})
-			
-			// Clear the canvas
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			
-			// Draw the particles
-			particles.forEach((particle) => {
-				drawParticle(particle, canvas, ctx);
-			})
-			
-			// Schedule next frame
-			requestAnimationFrame((time) => draw(time, canvas, ctx));
-		}
-		
-		function initializeCanvas() {
-			let canvas = document.getElementById('particle-canvas');
-			canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-			canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-			let ctx = canvas.getContext("2d");
-			
-			window.addEventListener('resize', () => {
-				canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-				canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-				ctx = canvas.getContext("2d");
-			})
-			
-			return [canvas, ctx];
-		}
-		
-		function startAnimation() {
-			if (document.getElementById('particle-canvas') === null) {
-				return;
-			}
-			const [canvas, ctx] = initializeCanvas();
-			
-			// Create a bunch of particles
-			for (let i = 0; i < NUM_PARTICLES; i++) {
-				particles.push(createParticle(canvas));
-			}
-			
-			requestAnimationFrame((time) => draw(time, canvas, ctx));
-		};
-		
-		// Start animation when document is loaded
-		(function () {
-			if (document.readystate !== 'loading') {
-				startAnimation();
-			} else {
-				document.addEventListener('DOMContentLoaded', () => {
-					startAnimation();
-				})
-			}
-		}());
-	});
-</script>

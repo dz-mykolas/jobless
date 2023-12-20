@@ -4,9 +4,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Company {
-    id: i32,
-    name: String,
-    address: String,
+    pub id: i32,
+    pub name: String,
+    pub address: String,
+    pub fk_user_id: i32,
 }
 
 #[derive(Deserialize)]
@@ -33,18 +34,19 @@ impl CompanyModel {
 }
 
 impl CompanyModel {
-    pub async fn create(&self, company: CompanyForCreate) -> Result<Company> {
+    pub async fn create(&self, company: CompanyForCreate, user_id: i32) -> Result<Company> {
         let company = sqlx::query_as!(
             Company,
             r#"
                 INSERT INTO 
-                    company (name, address) 
+                    company (name, address, fk_user_id) 
                 VALUES 
-                    ($1, $2) 
+                    ($1, $2, $3) 
                 RETURNING *
             "#,
             &company.name,
-            &company.address
+            &company.address,
+            &user_id,
         )
         .fetch_one(&self.pool)
         .await?;

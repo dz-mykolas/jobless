@@ -1,6 +1,7 @@
 use crate::models::company::{Company, CompanyForCreate, CompanyForUpdate, CompanyModel};
 use crate::web::services::auth::AuthError;
-use crate::web::{ApiError, Result, Validation};
+use crate::web::services::jwt::Claims;
+use crate::web::{validate_id, ApiError, Result, Validation};
 
 use axum::extract::{Path, State};
 use axum::Extension;
@@ -26,19 +27,20 @@ pub fn routes(controller: CompanyModel) -> Router {
 
 /* CRUD-MAIN */
 async fn create_company(
-    Extension(role): Extension<Role>,
+    Extension(claims): Extension<Claims>,
     State(controller): State<CompanyModel>,
     Json(payload): Json<CompanyForCreate>,
 ) -> Result<Json<Company>> {
     println!("->> {:<12} - create_company", "HANDLER");
 
-    if role != Role::Admin {
+    if claims.role != Role::Admin {
         return Err(ApiError::AuthError(AuthError::Forbidden));
     }
 
     payload.validate()?;
 
-    let company = controller.create(payload).await?;
+    let user_id = claims.sub.parse::<i32>().unwrap_or(0);
+    let company = controller.create(payload, user_id).await?;
 
     Ok(Json(company))
 }
@@ -57,14 +59,14 @@ async fn get_company(
 }
 
 async fn update_company(
-    Extension(role): Extension<Role>,
+    Extension(claims): Extension<Claims>,
     State(controller): State<CompanyModel>,
     Path(id): Path<i32>,
     Json(payload): Json<CompanyForUpdate>,
 ) -> Result<Json<Company>> {
     println!("->> {:<12} - update_company", "HANDLER");
 
-    if role != Role::Admin {
+    if claims.role != Role::Admin {
         return Err(ApiError::AuthError(AuthError::Forbidden));
     }
 
@@ -77,13 +79,13 @@ async fn update_company(
 }
 
 async fn delete_company(
-    Extension(role): Extension<Role>,
+    Extension(claims): Extension<Claims>,
     State(controller): State<CompanyModel>,
     Path(id): Path<i32>,
 ) -> Result<Json<Company>> {
     println!("->> {:<12} - delete_company", "HANDLER");
 
-    if role != Role::Admin {
+    if claims.role != Role::Admin {
         return Err(ApiError::AuthError(AuthError::Forbidden));
     }
 
@@ -141,16 +143,6 @@ fn validate_company_fields(name: Option<&String>, address: Option<&String>) -> R
 
     if !errors.is_empty() {
         return Err(ApiError::UnprocessableEntity(errors.join(", ")));
-    } else {
-        return Ok(());
-    }
-}
-
-fn validate_id(id: i32) -> Result<()> {
-    if id < 1 {
-        return Err(ApiError::BadRequest(
-            "id must be greater than 0".to_string(),
-        ));
     } else {
         return Ok(());
     }

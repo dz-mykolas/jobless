@@ -1,21 +1,27 @@
 <script>
-    import JobCard from '$lib/components/JobCard.svelte';
-    export let data;
+    import { user } from '$lib/stores.js';
 
-    const jobs = data.jobs;
+    export let data;
+    const applications = data.applications;
+    const job = data.job;
     const error = data.error;
 
-    import { user } from '$lib/stores.js';
+    const company_id = 1;
+
+    import ApplicationCard from '$lib/components/ApplicationCard.svelte';
 </script>
 
-<div class="jobs-container">
+<div class="application-container">
     {#if error}
         <p class="error">{error}</p>
     {:else}
-        {#each jobs as job}
+        {#each applications as application}
             {#if $user}
-                <JobCard 
+                <ApplicationCard 
+                    application={application}
                     job={job}
+                    companyId={company_id}
+                    jobId={application.fk_job_id}
                     role={$user.role}
                     user_id={parseInt($user.sub)}
                 />
@@ -29,7 +35,7 @@
         color: red;
     }
     
-    .jobs-container {
+    .application-container {
         background-color: #f9f9f9;
         padding: 20px;
         border-radius: 10px;
@@ -42,17 +48,17 @@
     }
     
     @media (min-width: 768px) {
-        .jobs-container {
+        .application-container {
             max-width: 750px;
         }
     }
     @media (min-width: 992px) {
-        .jobs-container {
+        .application-container {
             max-width: 970px;
         }
     }
     @media (min-width: 1200px) {
-        .jobs-container {
+        .application-container {
             max-width: 1170px;
         }
     }
