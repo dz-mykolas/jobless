@@ -1,6 +1,6 @@
 <script>
     export let company;
-    export let role;
+    export let user;
 
     import logo from '$lib/images/placeholder-logo.jpg';
     let description = 'Lorem ipsum dolor sit amet...';
@@ -30,18 +30,78 @@
             formFields = [
                 { name: 'id', type: 'hidden', value: company.id },
             ];
+        } else if (action === 'assign-employer') {
+            formModalTitle = 'Assign Employer';
+            formAction = '?/assign_employer';
         }
     }
 
     function handleFormCancel() {
         isFormModalActive = false;
     }
+
+    let users = [];
+
+    async function fetchUsers() {
+        const response = await fetch('/users/employers');
+        if (response.ok) {
+            const users = await response.json();
+            console.log('Users fetched', users);
+            return users.users;
+        } else {
+            console.error('Error fetching users');
+            throw new Error('Failed to fetch users');
+        }
+    }
+
+    async function onAssignEmployerClick() {
+        try {
+            const fetchedUsers = await fetchUsers();
+            if (fetchedUsers) {
+                console.log('Fetched users', fetchedUsers);
+                formFields = [
+                    { name: 'companyId', type: 'hidden', value: company.id },
+                    { 
+                        name: 'employerId', 
+                        type: 'select', 
+                        options: fetchedUsers.map(user => ({ value: user.fk_user_id, text: user.fk_user_id }))
+                    }
+                ];
+            }
+            openModal('assign-employer');
+        } catch (error) {
+            console.error('Error in onAssignEmployerClick:', error);
+        }
+    }
+
+    $: assigned_user = null;
+
+    async function fetchUser(id) {
+        let response = await fetch(`/users/${id}`);
+        let user = await response.json();
+
+        return user;
+    }
+
+    import { onMount } from 'svelte';
+
+    onMount(async () => {
+        if (user && user.role === 'Employer') {
+            assigned_user = await fetchUser(user.sub);
+            console.log(assigned_user.fk_company_id);
+        }
+    });
+
+    $: isWorkingHere = (user && user.role === 'Employer' && assigned_user && assigned_user.fk_company_id === company.id);
 </script>
 
-<div class="company-card">
+<div class="company-card {isWorkingHere ? 'blue-border' : ''}">
     <a href={`/companies/${company.id}`}>
         <div class="logo-section">
             <img src={logo} alt="Logo" class="company-logo"/>
+            {#if isWorkingHere}
+                <div class="working-here">Working here</div>
+            {/if}
         </div>
         <div class="info-section">
             <h3 class="company-name">{company.name}</h3>
@@ -50,7 +110,7 @@
         </div>
     </a>
     <div class="button-section">
-        {#if role === 'Admin'}
+        {#if user.role === 'Admin'}
             <FormModal 
                 isActive={isFormModalActive} 
                 title={formModalTitle}
@@ -59,12 +119,17 @@
                 onCancel={handleFormCancel} />
             <button class="edit" on:click={() => openModal('edit')}>Edit</button>
             <button class="remove" on:click={() => openModal('delete')}>Delete</button>
+            <button class="assign-employer" on:click={onAssignEmployerClick}>Assign Employer</button>
         {/if}
     </div>
 </div>
 
   
 <style>
+    .blue-border {
+        border: 2px solid blue;
+    }
+
     .company-card {
         display: flex;
         background-color: #fff;
@@ -84,8 +149,15 @@
         flex: 0 0 100px;
         background-color: #eee;
         display: flex;
-        align-items: center;
         justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .working-here {
+        margin-top: 10px; /* adjust as needed */
+        text-align: center;
+        font-family: 'Roboto', sans-serif;
     }
 
     .company-logo {
@@ -110,14 +182,6 @@
         font-size: 0.9em;
     }
 
-    .button-section {
-        display: flex;
-        flex-direction: column;
-        margin-left: auto;
-        margin-right: 30px;
-        justify-content: center;
-    }
-
     button {
         background-color: #4CAF50;
         border: none;
@@ -127,12 +191,15 @@
         text-decoration: none;
         display: inline-block;
         font-size: 16px;
-        width: 100%;
         cursor: pointer;
         margin: auto;
     }
 
     .remove {
         background-color: #f44336;
+    }
+
+    .assign-employer {
+        background-color: #2196F3;
     }
 </style>

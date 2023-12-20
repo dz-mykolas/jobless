@@ -1,5 +1,38 @@
 /** @type {import('./$types').Actions} */
 export const actions = {
+    assign_employer: async ({ cookies, request }) => {
+        const data = await request.formData();
+        const userId = data.get('employerId');
+        const companyId = data.get('companyId');
+        const token = cookies.get('token');
+
+        try {
+            let response = await fetch(`http://localhost:3000/api/users/${userId}/employer/${companyId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': `token=${token}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+
+            return {
+                status: 200,
+                body: {
+                    message: 'Employer assigned successfully'
+                }
+            };
+        } catch (error) {
+            return {
+                status: 500,
+                body: {
+                    error: error.message
+                }
+            };
+        }
+    },
     delete: async ({ cookies, request }) => {
         const data = await request.formData();
         const companyId = data.get('id');

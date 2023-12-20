@@ -25,6 +25,12 @@
                         <input bind:value={field.value} name={field.name} type="hidden" />
                     {:else if field.type === 'password'}
                         <input bind:value={field.value} name={field.name} type="password" placeholder={field.placeholder} />
+                    {:else if field.type === 'select'}
+                        <select bind:value={field.value} name={field.name}>
+                            {#each field.options as option}
+                                <option value={option.value}>{option.text}</option>
+                            {/each}
+                        </select>
                     {/if}
                 {/each}
                 <button>Submit</button>
@@ -34,12 +40,6 @@
 {/if}
 
 <style>
-    .input-container {
-        display: flex;
-        flex-direction: column;
-        align-items: left;
-    }
-
     .modal {
         display: block;
         position: fixed;
@@ -52,12 +52,26 @@
         background-color: rgba(0, 0, 0, 0.4);
     }
 
+    .modal h2 {
+        margin: 0 0 10px 0;
+        font-size: large;
+        font-family: 'Roboto', sans-serif;
+    }
+
     .modal-content {
         background-color: #fefefe;
         margin: 15% auto;
         padding: 20px;
         border: 1px solid #888;
-        width: 80%;
+        width: 50%;
+        min-width: 300px;
+    }
+
+    .input-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
     }
 
     .close {
@@ -72,5 +86,28 @@
         color: black;
         text-decoration: none;
         cursor: pointer;
+    }
+
+    button {
+        width: 100px;
+        border: none;
+        border-radius: 5px;
+        background-color: var(--color-theme-4);
+        color: white;
+        cursor: pointer;
+        font-family: 'Roboto', sans-serif;
+        padding: 10px 20px;
+        margin: 25px 0 0 0;
+    }
+
+    input {
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin: 10px 0 0 0;
+    }
+
+    select {
+        width: 50%;
     }
 </style>

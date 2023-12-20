@@ -1,5 +1,6 @@
 use crate::models::Result;
 
+#[derive(Debug, serde::Serialize)]
 pub struct User {
     pub fk_user_id: i32,
     pub email: String,
@@ -8,6 +9,7 @@ pub struct User {
     pub tags: Option<Vec<String>>,
     pub resume: Option<String>,
     pub role: String,
+    pub fk_company_id: Option<i32>,
 }
 
 pub struct UserCredentials {
@@ -156,7 +158,7 @@ impl UserModel {
         // Join users and users_credentials tables
         let user = sqlx::query!(
             r#"
-            SELECT users.fk_user_id, users.email, users.location, users.bio, users.tags, users.resume, users.role
+            SELECT users.fk_user_id, users.email, users.location, users.bio, users.tags, users.resume, users.role, users.fk_company_id
             FROM users
             INNER JOIN users_credentials
             ON users.fk_user_id = users_credentials.user_id
@@ -175,11 +177,24 @@ impl UserModel {
             tags: user.tags,
             resume: user.resume,
             role: user.role,
+            fk_company_id: user.fk_company_id,
         })
     }
 
     pub async fn find_by_id(&self, id: i32) -> Result<User> {
-        todo!();
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            SELECT users.fk_user_id, users.email, users.location, users.bio, users.tags, users.resume, users.role, users.fk_company_id
+            FROM users
+            WHERE users.fk_user_id = $1
+            "#,
+            id
+        )
+        .fetch_one(&self.db_pool)
+        .await?;
+
+        Ok(user)
     }
 
     pub async fn find_hashed_password_by_username(&self, username: String) -> Result<String> {
@@ -196,5 +211,38 @@ impl UserModel {
         .password_hash;
 
         Ok(hashed_password)
+    }
+
+    pub async fn find_employers(&self) -> Result<Vec<User>> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            SELECT users.fk_user_id, users.email, users.location, users.bio, users.tags, users.resume, users.role, users.fk_company_id
+            FROM users
+            WHERE users.role = 'employer'
+            "#,
+        )
+        .fetch_all(&self.db_pool)
+        .await?;
+
+        Ok(user)
+    }
+
+    pub async fn set_company_for_employer(&self, user_id: i32, company_id: i32) -> Result<User> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            UPDATE users
+            SET fk_company_id = $1
+            WHERE fk_user_id = $2
+            RETURNING *
+            "#,
+            company_id,
+            user_id
+        )
+        .fetch_one(&self.db_pool)
+        .await?;
+
+        Ok(user)
     }
 }

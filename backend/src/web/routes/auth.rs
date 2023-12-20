@@ -1,11 +1,11 @@
-use axum::{extract::State, routing::post, Json, Router};
+use axum::{extract::{State, Path}, routing::post, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tower_cookies::{Cookie, Cookies};
 
 use crate::{
     error::Error,
-    models::user::{UserCredentials, UserForRegister},
+    models::user::{UserCredentials, UserForRegister, UserModel},
     web::{services::auth::AuthController, ApiError},
 };
 
@@ -129,5 +129,60 @@ async fn auth_verify(
     Ok(Json(json!({
         "message": "Successfully verified",
         "claims": claims,
+    })))
+}
+
+pub async fn get_employers(
+    State(controller): State<AuthController>
+) -> Result<Json<Value>> {
+    println!("->> {:<12} - api_get_by_role", "HANDLER");
+
+    let user_controller = UserModel::new(controller.db_pool.clone());
+
+    let users = user_controller
+        .find_employers()
+        .await
+        .map_err(ApiError::from)?;
+
+    Ok(Json(json!({
+        "users": users,
+    })))
+}
+
+pub async fn set_company_for_employer(
+    State(controller): State<AuthController>,
+    Path((user_id, company_id)): Path<(i32, i32)>,
+) -> Result<Json<Value>> {
+    println!("->> {:<12} - api_set_company_for_employer", "HANDLER");
+
+    let user_controller = UserModel::new(controller.db_pool.clone());
+
+    println!("->> {:<12} - api_set_company_for_employer: user_id: {}, company_id: {}", "HANDLER", user_id, company_id);
+
+    let user = user_controller
+        .set_company_for_employer(user_id, company_id)
+        .await
+        .map_err(ApiError::from)?;
+
+    Ok(Json(json!({
+        "user": user,
+    })))
+}
+
+pub async fn get_user_by_id(
+    State(controller): State<AuthController>,
+    Path(user_id): Path<i32>,
+) -> Result<Json<Value>> {
+    println!("->> {:<12} - api_get_user_by_id", "HANDLER");
+
+    let user_controller = UserModel::new(controller.db_pool.clone());
+
+    let user = user_controller
+        .find_by_id(user_id)
+        .await
+        .map_err(ApiError::from)?;
+
+    Ok(Json(json!({
+        "user": user,
     })))
 }

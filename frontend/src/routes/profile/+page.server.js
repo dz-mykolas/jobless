@@ -45,7 +45,7 @@ export async function load({ fetch, locals }) {
     }
     
     try {
-        const response = await fetch('http://localhost:3000/api/applications/user');
+        const response = await fetch('http://localhost:3000/api/users/applications');
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`);
         }

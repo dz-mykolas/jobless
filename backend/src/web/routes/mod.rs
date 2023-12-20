@@ -15,7 +15,7 @@ use axum::{
     http::{Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 
@@ -104,10 +104,31 @@ fn configure_api_routes(db_pool: Pool<Postgres>) -> Router {
         .merge(
             Router::new()
                 .route(
-                    "/applications/user",
+                    "/users/applications",
                     get(self::application::get_applications_by_user),
                 )
                 .with_state(application_controller.clone()),
+        )
+        .merge(
+            Router::new()
+                .route(
+                    "/users/employers",
+                    get(self::auth::get_employers),
+                )
+                .with_state(AuthController::new(db_pool.clone())),
+        )
+        .merge(
+            Router::new()
+                .route("/users/:user_id", get(self::auth::get_user_by_id))
+                .with_state(AuthController::new(db_pool.clone())),
+        )
+        .merge(
+            Router::new()
+                .route(
+                    "/users/:user_id/employer/:company_id",
+                    get(self::auth::set_company_for_employer),
+                )
+                .with_state(AuthController::new(db_pool.clone())),
         )
         .nest("/companies/:id", job::routes(job_controller))
         .nest(

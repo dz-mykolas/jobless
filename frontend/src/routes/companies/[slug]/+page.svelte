@@ -7,6 +7,7 @@
     const company = data.company;
 
     import { user } from '$lib/stores.js';
+    import { onMount } from 'svelte';
 
     import FormModal from '$lib/components/FormModal.svelte';
     let isFormModalActive = false;
@@ -33,10 +34,25 @@
     function handleFormCancel() {
         isFormModalActive = false;
     }
+
+    $: assigned_user = null;
+
+    async function fetchUser(id) {
+        let response = await fetch(`/users/${id}`);
+        let user = await response.json();
+
+        return user;
+    }
+
+    onMount(async () => {
+        if ($user && $user.role === 'Employer') {
+            assigned_user = await fetchUser($user.sub);
+            console.log(assigned_user.fk_company_id);
+        }
+    });
 </script>
 
-<div class="jobs-container">
-    <h4>Jobs in company: {company.name}</h4>
+<div class="components-container">
     {#if error}
         <p class="error">{error}</p>
     {:else}
@@ -47,9 +63,12 @@
             fields={formFields}
             onCancel={handleFormCancel}
         />
-        {#if $user && ($user.role === 'Admin' || $user.role === 'Employer')}
-            <button class="create" on:click={() => openModal('create')}>Create</button>
+        {#if $user && ($user.role === 'Admin' || (assigned_user && ($user.role === 'Employer' && company.id === assigned_user.fk_company_id)))}
+            <div class="create">
+                <button on:click={() => openModal('create')}>Create Job</button>
+            </div>
         {/if}
+        <h4>Jobs in company: {company.name}</h4>
         {#each jobs as job}
             {#if $user}
                 <JobCard 
@@ -61,37 +80,3 @@
         {/each}
     {/if}
 </div>
-
-<style>
-    .error {
-        color: red;
-    }
-    
-    .jobs-container {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        margin: auto;
-        width: 100%;
-        max-height: 600px;
-        overflow-y: auto;
-        box-sizing: border-box;
-    }
-    
-    @media (min-width: 768px) {
-        .jobs-container {
-            max-width: 750px;
-        }
-    }
-    @media (min-width: 992px) {
-        .jobs-container {
-            max-width: 970px;
-        }
-    }
-    @media (min-width: 1200px) {
-        .jobs-container {
-            max-width: 1170px;
-        }
-    }
-</style>

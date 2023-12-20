@@ -137,14 +137,6 @@
         font-size: 0.9em;
     }
 
-    .button-section {
-        display: flex;
-        flex-direction: column;
-        margin-left: auto;
-        margin-right: 30px;
-        justify-content: center;
-    }
-
     button {
         background-color: #4CAF50;
         border: none;
@@ -154,7 +146,6 @@
         text-decoration: none;
         display: inline-block;
         font-size: 16px;
-        width: 100%;
         cursor: pointer;
         margin: auto;
     }

@@ -56,7 +56,7 @@ impl From<bcrypt::BcryptError> for AuthError {
 
 #[derive(Clone)]
 pub struct AuthController {
-    db_pool: Pool<Postgres>,
+    pub db_pool: Pool<Postgres>,
 }
 
 impl AuthController {
