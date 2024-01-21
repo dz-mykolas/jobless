@@ -11,6 +11,7 @@
 </script>
 
 <div class="components-container">
+    <h1>Your Applications</h1>
     {#if error}
         <p class="error">{error}</p>
     {:else}

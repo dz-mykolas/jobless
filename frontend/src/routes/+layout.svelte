@@ -18,6 +18,13 @@
 		console.log('pathname', pathname);
 		user.set(data.user);
 	}
+
+	let currentTime = new Date().toLocaleTimeString();
+
+	// Update the time every second
+	setInterval(() => {
+		currentTime = new Date().toLocaleTimeString();
+	}, 1000);
 </script>
 
 <div class="app">
@@ -28,7 +35,7 @@
 	</main>
 
 	<footer>
-		<p>Visit <a href="https://github.com/dz-mykolas/jobless">Github Page</a> to learn more about this project</p>
+		<p>Current time: {currentTime}. Visit <a href="https://github.com/dz-mykolas/jobless">Github Page</a> to learn more about this project</p>
 	</footer>
 </div>
 
@@ -37,8 +44,9 @@
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
-		margin: 0;
 		height: 100vh;
+		width: 100vw;
+		justify-content: center;
 	}
 
 	main {
@@ -46,10 +54,10 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 0px;
+		padding: 0;
 		margin: 0;
-		box-sizing: border-box;
 		overflow: hidden;
+		box-sizing: border-box;
 	}
 
 	footer {
@@ -59,11 +67,25 @@
 		align-items: center;
 		padding: 12px;
 		margin: 0;
+		box-sizing: border-box;
+		font-size: 1em;
 	}
 
 	footer a {
 		font-weight: bold;
 		margin: 0;
+	}
+
+	@media (min-width: 1024px) {
+		footer {
+			font-size: 5em;
+		}
+	}
+
+	@media (min-width: 768px) {
+		footer {
+			font-size: 1em;
+		}
 	}
 
 	@media (min-width: 480px) {

@@ -95,20 +95,22 @@
     $: isWorkingHere = (user && user.role === 'Employer' && assigned_user && assigned_user.fk_company_id === company.id);
 </script>
 
-<div class="company-card {isWorkingHere ? 'blue-border' : ''}">
-    <a href={`/companies/${company.id}`}>
-        <div class="logo-section">
-            <img src={logo} alt="Logo" class="company-logo"/>
-            {#if isWorkingHere}
-                <div class="working-here">Working here</div>
-            {/if}
-        </div>
-        <div class="info-section">
-            <h3 class="company-name">{company.name}</h3>
-            <p class="company-address">{company.address}</p>
-            <p class="company-description">{description}</p>
-        </div>
-    </a>
+<div class="component-card {isWorkingHere ? 'blue-border' : ''}">
+    <div class="details-wrapper">
+        <a href={`/companies/${company.id}`}>
+            <div class="logo-section">
+                <img src={logo} alt="Logo" class="company-logo"/>
+                {#if isWorkingHere}
+                    <div class="working-here">Working here</div>
+                {/if}
+            </div>
+            <div class="info-section">
+                <h3 class="company-name">{company.name}</h3>
+                <p class="company-address">{company.address}</p>
+                <p class="company-description">{description}</p>
+            </div>
+        </a>
+    </div>
     <div class="button-section">
         {#if user.role === 'Admin'}
             <FormModal 
@@ -127,31 +129,7 @@
   
 <style>
     .blue-border {
-        border: 2px solid blue;
-    }
-
-    .company-card {
-        display: flex;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        margin-bottom: 20px;
-        height: 150px;
-    }
-
-    .company-card a {
-        display: flex;
-        text-decoration: none;
-    }
-
-    .logo-section {
-        flex: 0 0 100px;
-        background-color: #eee;
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        align-items: center;
+        border: 0.5vw solid blue;
     }
 
     .working-here {
@@ -173,13 +151,11 @@
     .company-name {
         margin: 0;
         color: #333;
-        font-size: 1.2em;
     }
 
     .company-address, .company-description {
         margin: 5px 0;
         color: #666;
-        font-size: 0.9em;
     }
 
     button {
@@ -190,7 +166,6 @@
         text-align: center;
         text-decoration: none;
         display: inline-block;
-        font-size: 16px;
         cursor: pointer;
         margin: auto;
     }

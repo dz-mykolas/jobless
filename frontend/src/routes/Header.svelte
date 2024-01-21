@@ -26,9 +26,6 @@
 			</svg>
 		</button>
 		<div class="user-menu" class:open={menuOpen}>
-			<!-- REPLACE THIS WITH DYNAMIC MENU: -->
-		  	<!-- 1) Display login and register if not logged in -->
-			<!-- 2) Else display profile button -->
 			<ul>
 				{#if $user}
 					<li aria-current={$page.url.pathname === '/profile' ? 'page' : undefined}>
@@ -335,7 +332,6 @@
 		height: auto;
 	}
 
-
 	.nav-menu {
 		display: flex;
 		overflow: hidden;
@@ -343,6 +339,45 @@
 
 	.hamburger {
 		display: none;
+	}
+
+	@media screen and (min-width: 1280px) {
+		header {
+			height: 10vh;
+		}
+
+		li {
+			height: 100%;
+		}
+
+		ul {
+			height: 100%;
+		}
+
+		nav a {
+			font-size: 1.5vw;
+		}
+
+		.user-menu {
+			top: 0;
+			right: 0;
+			padding-right: 2em;
+			display: flex;
+			height: 10vh;
+		}
+
+		.user-menu ul li {
+			height: 100%;
+			margin-left: 1em;
+		}
+
+		li[aria-current='page']::before {
+			content: '';
+			position: absolute;
+			bottom: 3vh;
+			border-bottom: solid 3px var(--color-theme-4);
+			animation: border_anim 0.35s ease-out forwards;
+		}
 	}
 
 	/* Styles for small screens */

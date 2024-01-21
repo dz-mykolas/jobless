@@ -1,9 +1,21 @@
 <script>
     export let isActive = false;
     export let title = '';
-    export let formAction = ''; // URL to which the form will be submitted
-    export let fields = []; // Array of objects representing fields
+    export let formAction = '';
+    export let fields = [];
     export let onCancel;
+
+    let errorMessage = '';
+    let isDisabled = true;
+
+    // Reactive statement to check for empty fields and set error message
+    $: {
+        isDisabled = fields.some(field => {
+            return typeof field.value === 'string' ? !field.value.trim() : !field.value;
+        });
+
+        errorMessage = isDisabled ? 'Please fill out all fields.' : '';
+    }
 
     function handleCancel() {
         if (onCancel) {
@@ -33,7 +45,10 @@
                         </select>
                     {/if}
                 {/each}
-                <button>Submit</button>
+                {#if errorMessage}
+                    <div class="error-message">{errorMessage}</div>
+                {/if}
+                <button type="submit" disabled={isDisabled}>Submit</button>
             </form>
         </div>
     </div>
@@ -54,7 +69,6 @@
 
     .modal h2 {
         margin: 0 0 10px 0;
-        font-size: large;
         font-family: 'Roboto', sans-serif;
     }
 

@@ -98,6 +98,41 @@ export const actions = {
                 }
             };
         }
+    },
+    edit: async ({ cookies, request }) => {
+        const data = await request.formData();
+        const id = data.get('id');
+        const name = data.get('name');
+        const address = data.get('address');
+        const token = cookies.get('token');
+
+        try {
+            let response = await fetch(`http://localhost:3000/api/companies/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': `token=${token}`
+                },
+                body: JSON.stringify({ name, address })
+            });
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+
+            return {
+                status: 200,
+                body: {
+                    message: 'Company updated successfully'
+                }
+            };
+        } catch (error) {
+            return {
+                status: 500,
+                body: {
+                    error: error.message
+                }
+            };
+        }
     }
 };
 

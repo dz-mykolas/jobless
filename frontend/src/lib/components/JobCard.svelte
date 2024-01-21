@@ -4,9 +4,8 @@
     export let user_id;
 
     // Placeholder values
-    let date = '2020-01-01'
     import logo from '$lib/images/placeholder-logo.jpg';
-    let description = 'Lorem ipsum dolor sit amet...';
+    let description = job.description || 'No description';
 
     import FormModal from '$lib/components/FormModal.svelte';
     let isFormModalActive = false;
@@ -23,7 +22,7 @@
             formModalTitle = 'Edit Job';
             formAction = '?/edit';
             formFields = [
-                { name: 'id', type: 'hidden', value: company.id },
+                { name: 'id', type: 'hidden', value: job.id },
                 { name: 'title', type: 'text', placeholder: 'Name', value: job.title },
                 { name: 'description', type: 'text', placeholder: 'Address', value: job.description }
             ];
@@ -51,7 +50,7 @@
     }
 </script>
 
-<div class="job-card">
+<div class="component-card">
     {#if role !== 'User' && (role === 'Employer' && job.fk_user_id === user_id)}
         <div class="details-wrapper">
             <a href={`/jobs/${job.id}`}>
@@ -93,34 +92,6 @@
 </div>
 
 <style>
-    .job-card {
-        display: flex;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        margin-bottom: 20px;
-        height: 150px;
-    }
-
-    .details-wrapper {
-        display: flex;
-        text-decoration: none;
-    }
-
-    .job-card a {
-        display: flex;
-        text-decoration: none;
-    }
-
-    .logo-section {
-        flex: 0 0 100px;
-        background-color: #eee;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     .job-logo {
         max-width: 80%;
         max-height: 80%;
@@ -134,13 +105,11 @@
     .job-title {
         margin: 0;
         color: #333;
-        font-size: 1.2em;
     }
 
     .job-description {
         margin: 5px 0;
         color: #666;
-        font-size: 0.9em;
     }
 
     button {
@@ -151,7 +120,6 @@
         text-align: center;
         text-decoration: none;
         display: inline-block;
-        font-size: 16px;
         cursor: pointer;
         margin: auto;
     }

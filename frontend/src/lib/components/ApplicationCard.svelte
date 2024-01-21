@@ -24,7 +24,7 @@
             formFields = [
                 { name: 'id', type: 'hidden', value: application.id },
                 { name: 'name', type: 'text', placeholder: 'Name', value: application.name },
-                { name: 'description', type: 'text', placeholder: 'Description', value: application.address }
+                { name: 'description', type: 'text', placeholder: 'Description', value: application.description }
             ];
         } else if (action === 'delete') {
             formModalTitle = 'Delete Application';
@@ -58,19 +58,21 @@
     }
 </script>
 
-<div class="application-card">
-    <div class="logo-section">
-        {#if application.status === 'Denied'}
-            <div class="cross-out">&#10060;</div>
-        {:else if application.status === 'Accepted'}
-            <div class="check-mark">&#10004;</div>
-        {:else}
-            <img src={logo} alt="Logo" class="application-logo"/>
-        {/if}
-    </div>
-    <div class="info-section">
-        <h3 class="application-name">{application.name}</h3>
-        <p class="application-description">{application.description}</p>
+<div class="component-card">
+    <div class="details-wrapper">
+        <div class="logo-section">
+            {#if application.status === 'Denied'}
+                <div class="cross-out">&#10060;</div>
+            {:else if application.status === 'Accepted'}
+                <div class="check-mark">&#10004;</div>
+            {:else}
+                <img src={logo} alt="Logo" class="application-logo"/>
+            {/if}
+        </div>
+        <div class="info-section">
+            <h3 class="application-name">{application.name}</h3>
+            <p class="application-description">{application.description}</p>
+        </div>
     </div>
     <div class="button-section">
         <FormModal 
@@ -97,24 +99,6 @@
 
   
 <style>
-    .application-card {
-        display: flex;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        margin-bottom: 20px;
-        height: 150px;
-    }
-
-    .logo-section {
-        flex: 0 0 100px;
-        background-color: #eee;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     .application-logo {
         max-width: 80%;
         max-height: 80%;
@@ -128,13 +112,11 @@
     .application-name {
         margin: 0;
         color: #333;
-        font-size: 1.2em;
     }
 
     .application-description {
         margin: 5px 0;
         color: #666;
-        font-size: 0.9em;
     }
 
     button {
@@ -145,7 +127,6 @@
         text-align: center;
         text-decoration: none;
         display: inline-block;
-        font-size: 16px;
         cursor: pointer;
         margin: auto;
     }

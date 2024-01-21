@@ -72,7 +72,7 @@ async fn get_application(
 async fn update_application(
     Extension(claims): Extension<Claims>,
     State(controller): State<ApplicationModel>,
-    Path(id): Path<i32>,
+    Path((_company_id, _job_id, id)): Path<(i32, i32, i32)>,
     Json(payload): Json<ApplicationForUpdate>,
 ) -> Result<Json<Application>> {
     println!("->> {:<12} - update_application", "HANDLER");

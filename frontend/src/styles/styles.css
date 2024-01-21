@@ -17,10 +17,10 @@
 	--column-margin-top: 4rem;
 	font-family: var(--font-body);
 	color: var(--color-text);
+	font-size: 16px;
 }
 
 body {
-	min-height: 100vh;
 	margin: 0;
 	background-attachment: fixed;
 	background-color: var(--color-bg-1);
@@ -89,12 +89,6 @@ button {
 
 button:focus:not(:focus-visible) {
 	outline: none;
-}
-
-@media (min-width: 720px) {
-	h1 {
-		font-size: 2.4rem;
-	}
 }
 
 .visually-hidden {
@@ -166,6 +160,35 @@ button:focus:not(:focus-visible) {
 	box-sizing: border-box;
 }
 
+.component-card {
+	display: flex;
+	background-color: #fff;
+	border-radius: 10px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+	margin-bottom: 20px;
+	height: auto;
+}
+
+.component-card a {
+	display: flex;
+	text-decoration: none;
+}
+
+.logo-section {
+	flex: 0 0 100px;
+	background-color: #eee;
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+}
+
+.details-wrapper {
+	display: flex;
+	text-decoration: none;
+}
+
 @media (min-width: 768px) {
 	.components-container {
 		max-width: 750px;
@@ -178,6 +201,31 @@ button:focus:not(:focus-visible) {
 }
 @media (min-width: 1200px) {
 	.components-container {
-		max-width: 1170px;
+		width: 80vw;
+		height: 80vh;
+		max-width: none;
+		max-height: none;
+	}
+
+	.components-container li {
+		width: 100%;
+	}
+
+	.component-card {
+		flex-direction: row;
+		height: 15vh;
+		font-size: 1.5vh;
+	}
+
+	.logo-section {
+		max-width: 100%;
+		max-height: 100%;
+		width: 25vw;
+		height: 100%;
+	}
+
+	.logo-section img {
+		max-width: 100%;
+		max-height: 100%;
 	}
 }
